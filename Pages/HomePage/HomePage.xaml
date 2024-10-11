@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Bluetooth.Pages.HomePage"
+        Title="Bluetooth">
+
+    <StackLayout Background="Transparent">
+        <ListView x:Name="DevicesListView"
+                  ItemsSource="{Binding Devices}"
+                  SelectionMode="Single"
+                  Background="Transparent"
+                  ItemTapped="DevicesListView_ItemTapped">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <FlexLayout Direction="Row" BackgroundColor="Transparent" JustifyContent="SpaceBetween" Margin="20, 0, 10, 0">
+                            <Label Text="{Binding Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                            <ActivityIndicator IsRunning="{Binding IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
+                            <Label Text="Connected" IsVisible="{Binding IsConnected}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                        </FlexLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Label x:Name="StatusLabel"
+               Text=""
+               FontSize="18"
+               HorizontalOptions="Center"/>
+    </StackLayout>
+</ContentPage>
