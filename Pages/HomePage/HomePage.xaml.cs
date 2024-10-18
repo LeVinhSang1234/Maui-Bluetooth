@@ -1,14 +1,18 @@
+using Bluetooth.Services;
+
 namespace Bluetooth.Pages
 {
     public partial class HomePage : ContentPage
     {
+        private BluetoothServiceManager bluetoothServiceManager = new BluetoothServiceManager();
+
         public HomePage()
         {
             InitializeComponent();
             try
             {
-                BluetoothServiceManager bluetoothServiceManager = new BluetoothServiceManager();
-                bluetoothServiceManager.StartBluetooth();
+                bluetoothServiceManager.InitializeBluetooth();
+                BindingContext = bluetoothServiceManager;
             }
             catch (Exception e)
             {
@@ -22,6 +26,8 @@ namespace Bluetooth.Pages
             BluetoothDevice? selectedDevice = e.Item as BluetoothDevice;
             if (selectedDevice != null)
             {
+                System.Diagnostics.Debug.WriteLine($"selectedDevice {selectedDevice.Name}");
+                bluetoothServiceManager.Connect(selectedDevice);
             }
         }
     }

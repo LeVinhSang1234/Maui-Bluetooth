@@ -5,6 +5,10 @@
         Title="Bluetooth">
 
     <StackLayout Background="Transparent">
+        <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 10, 0">
+            <Label Text="Devices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 3, 0" />
+            <ActivityIndicator IsRunning="{Binding IsGetting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
+        </FlexLayout>
         <ListView x:Name="DevicesListView"
                   ItemsSource="{Binding Devices}"
                   SelectionMode="Single"
