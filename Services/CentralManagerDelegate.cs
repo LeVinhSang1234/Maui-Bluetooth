@@ -31,7 +31,7 @@ public class CentralManagerDelegate : CBCentralManagerDelegate
 
     public override void FailedToConnectPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError? error)
     {
-        System.Diagnostics.Debug.WriteLine($"Failed to connect to {peripheral.Name}: {error?.LocalizedDescription}");
+        _bluetoothServiceManager.ConnecteFail(peripheral);
     }
 
     public override void DisconnectedPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError? error)

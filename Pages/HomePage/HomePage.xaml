@@ -5,6 +5,14 @@
         Title="Bluetooth">
 
     <StackLayout Background="Transparent">
+        <FlexLayout IsVisible="{Binding IsDeviceConnected}" Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 10, 0">
+            <Label Text="Devices Connected" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 3, 0" />
+        </FlexLayout>
+        <FlexLayout IsVisible="{Binding IsDeviceConnected}" JustifyContent="SpaceBetween" Direction="Row" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
+            <Label Text="{Binding DeviceConnect.Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 3, 0" />
+            <ActivityIndicator IsVisible="{Binding DeviceConnect.IsConnecting}" IsRunning="{Binding DeviceConnect.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
+            <Label IsVisible="{Binding DeviceConnect.IsConnected}" Text="Connected" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 3, 0" />
+        </FlexLayout>
         <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 10, 0">
             <Label Text="Devices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 3, 0" />
             <ActivityIndicator IsRunning="{Binding IsGetting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
@@ -19,8 +27,6 @@
                     <ViewCell>
                         <FlexLayout Direction="Row" BackgroundColor="Transparent" JustifyContent="SpaceBetween" Margin="20, 0, 10, 0">
                             <Label Text="{Binding Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-                            <ActivityIndicator IsRunning="{Binding IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
-                            <Label Text="Connected" IsVisible="{Binding IsConnected}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
                         </FlexLayout>
                     </ViewCell>
                 </DataTemplate>

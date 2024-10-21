@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using CoreBluetooth;
 using Foundation;
+using Microsoft.Maui.Controls;
 
 namespace Bluetooth.Services
 {
@@ -13,7 +14,10 @@ namespace Bluetooth.Services
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public ObservableCollection<BluetoothDevice> Devices { get; set; } = new ObservableCollection<BluetoothDevice>();
+        public BluetoothDevice? DeviceConnect { get; set; }
         public bool IsGetting { get; set; }
+
+        public bool IsDeviceConnected => DeviceConnect != null;
 
         public async void InitializeBluetooth()
         {
@@ -32,18 +36,17 @@ namespace Bluetooth.Services
                     IsGetting = true;
                     OnPropertyChanged(nameof(IsGetting));
                     _centralManager.ScanForPeripherals(peripheralUuids: new CBUUID[0]);
-                    await Task.Delay(2000);
-                    IsGetting = false;
-                    OnPropertyChanged(nameof(IsGetting));
+                    await Task.Delay(5000);
                     StopScanning();
-                    await Task.Delay(2000);
-                } else await Task.Delay(1000);
+                    await Task.Delay(100);
+                }
+                else await Task.Delay(1000);
             }
         }
 
         public void AddDevice(BluetoothDevice device)
         {
-            if (_DevicesScan.Add(device) && !Contains(device.cBPeripheral))
+            if (_DevicesScan.Add(device) && !Contains(device.cBPeripheral) && device.Name != DeviceConnect?.Name)
             {
                 Devices.Add(device);
                 OnPropertyChanged(nameof(Devices));
@@ -63,47 +66,51 @@ namespace Bluetooth.Services
 
         public void Connect(BluetoothDevice device)
         {
-            var _device = Devices.FirstOrDefault(d => d.cBPeripheral?.Identifier == device.cBPeripheral.Identifier);
+            var _device = Devices.FirstOrDefault(d => d.cBPeripheral?.Name == device.cBPeripheral.Name);
             if (_device != null)
             {
+                Devices.Remove(_device);
                 DisconnectAllExcept();
-                _device.IsConnecting = true;
+                DeviceConnect = _device;
+                DeviceConnect.IsConnecting = true;
+                OnPropertyChanged(nameof(IsDeviceConnected));
+                OnPropertyChanged(nameof(DeviceConnect));
                 _centralManager.ConnectPeripheral(_device.cBPeripheral);
-                OnPropertyChanged(nameof(Devices));
             }
         }
 
         public void DisconnectAllExcept()
         {
-            foreach (var device in Devices)
+            if (DeviceConnect != null)
             {
-                if (device.IsConnected || device.IsConnecting)
-                {
-                    device.IsConnecting = false;
-                    _centralManager.CancelPeripheralConnection(device.cBPeripheral);
-                }
+                _centralManager.CancelPeripheralConnection(DeviceConnect.cBPeripheral);
             }
         }
 
-        public void Disconnected(CBPeripheral cBPeripheral)
+        public void Disconnected(CBPeripheral peripheral)
         {
-            var _device = Devices.FirstOrDefault(d => d.cBPeripheral?.Identifier == cBPeripheral.Identifier);
-            if(_device != null)
-            {
-                _device.IsConnected = false;
-                OnPropertyChanged(nameof(Devices));
-            }
+            DeviceConnect = null;
+            OnPropertyChanged(nameof(DeviceConnect));
         }
 
 
         public void Connected(CBPeripheral cBPeripheral)
         {
-            var _device = Devices.FirstOrDefault(d => d.cBPeripheral?.Identifier == cBPeripheral.Identifier);
-            if (_device != null)
+            if (DeviceConnect != null && DeviceConnect.Name == cBPeripheral.Name)
             {
-                _device.IsConnecting = false;
-                _device.IsConnected = true;
-                OnPropertyChanged(nameof(Devices));
+                DeviceConnect.IsConnecting = false;
+                DeviceConnect.IsConnected = true;
+                OnPropertyChanged(nameof(DeviceConnect));
+            }
+        }
+
+
+        public void ConnecteFail(CBPeripheral cBPeripheral)
+        {
+            if (DeviceConnect != null && DeviceConnect.Name == cBPeripheral.Name)
+            {
+                DeviceConnect = null;
+                OnPropertyChanged(nameof(DeviceConnect));
             }
         }
 
@@ -117,7 +124,7 @@ namespace Bluetooth.Services
 
             foreach (var scanDevice in _DevicesScan)
             {
-                if (!Contains(scanDevice.cBPeripheral))
+                if (!Contains(scanDevice.cBPeripheral) && scanDevice.Name != DeviceConnect?.Name)
                 {
                     Devices.Add(scanDevice);
                 }
