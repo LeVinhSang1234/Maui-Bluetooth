@@ -69,8 +69,8 @@ namespace Bluetooth.Services
             var _device = Devices.FirstOrDefault(d => d.cBPeripheral?.Name == device.cBPeripheral.Name);
             if (_device != null)
             {
-                Devices.Remove(_device);
                 DisconnectAllExcept();
+                Devices.Remove(_device);
                 DeviceConnect = _device;
                 DeviceConnect.IsConnecting = true;
                 OnPropertyChanged(nameof(IsDeviceConnected));
@@ -83,14 +83,17 @@ namespace Bluetooth.Services
         {
             if (DeviceConnect != null)
             {
+                DeviceConnect.IsConnected = false;
+                DeviceConnect.IsConnecting = false;
+                DeviceConnect.ManuFacturerName = string.Empty;
+                Devices.Add(DeviceConnect);
                 _centralManager.CancelPeripheralConnection(DeviceConnect.cBPeripheral);
+                DeviceConnect = null;
             }
         }
 
         public void Disconnected(CBPeripheral peripheral)
         {
-            DeviceConnect = null;
-            OnPropertyChanged(nameof(DeviceConnect));
         }
 
 
