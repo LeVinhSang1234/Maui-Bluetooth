@@ -5,6 +5,18 @@
         Title="Bluetooth">
 
     <StackLayout Background="Transparent">
+        <FlexLayout IsVisible="{Binding IsDeviceConnected}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+            <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
+        </FlexLayout>
+        <FlexLayout IsVisible="{Binding IsDeviceConnected}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
+            <Label Text="{Binding DeviceConnected.Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+            <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
+            <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="Connected" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+        </FlexLayout>
+        <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 10, 0">
+            <Label Text="Devices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+            <ActivityIndicator IsRunning="True" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" Margin="5, 0, 0, 0"/>
+        </FlexLayout>
         <ListView x:Name="DevicesListView"
                   ItemsSource="{Binding Devices}"
                   SelectionMode="Single"
@@ -15,8 +27,8 @@
                     <ViewCell>
                         <FlexLayout Direction="Row" BackgroundColor="Transparent" JustifyContent="SpaceBetween" Margin="20, 0, 10, 0">
                             <Label Text="{Binding Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-                            <ActivityIndicator IsRunning="{Binding IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
-                            <Label Text="Connected" IsVisible="{Binding IsConnected}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                            <!--<ActivityIndicator IsRunning="{Binding IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />-->
+                            <!--<Label Text="Connected" IsVisible="{Binding IsConnected}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />-->
                         </FlexLayout>
                     </ViewCell>
                 </DataTemplate>

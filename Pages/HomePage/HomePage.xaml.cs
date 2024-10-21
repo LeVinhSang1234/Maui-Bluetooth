@@ -1,5 +1,4 @@
 using Bluetooth.Services;
-using System.Windows.Input;
 
 namespace Bluetooth.Pages
 {

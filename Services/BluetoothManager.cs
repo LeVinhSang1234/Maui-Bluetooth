@@ -1,103 +1,120 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Plugin.BLE;
 using Plugin.BLE.Abstractions.Contracts;
 
 namespace Bluetooth.Services
 {
-    public class BluetoothManager
+    public class BluetoothManager : INotifyPropertyChanged
     {
         private readonly IBluetoothLE _bluetoothLe;
         private readonly IAdapter _adapter;
-        private BluetoothDevice? _deviceConnected;
+        private ObservableCollection<BluetoothDevice> DevicesScan;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public bool IsDeviceConnected { get; set; } = false;
         public ObservableCollection<BluetoothDevice> Devices { get; set; }
+        public BluetoothDevice? DeviceConnected { get; set; }
 
         public BluetoothManager()
         {
             _bluetoothLe = CrossBluetoothLE.Current;
             _adapter = CrossBluetoothLE.Current.Adapter;
             Devices = new ObservableCollection<BluetoothDevice>();
+            DevicesScan = new ObservableCollection<BluetoothDevice>();
 
             _adapter.DeviceDiscovered += (s, a) =>
             {
-                if (!Devices.Any(d => d.Id.ToString() == a.Device.Id.ToString()) && !string.IsNullOrEmpty(a.Device.Name))
+                if (!DevicesScan.Any(d => d.Device.Id.ToString() == a.Device.Id.ToString()) && !string.IsNullOrEmpty(a.Device.Name))
                 {
-                    Devices.Add(new BluetoothDevice { Name = a.Device.Name, Id = a.Device.Id.ToString(), Device = a.Device, Rssi = a.Device.Rssi, IsConnecting = false, IsConnected = false });
+                    DevicesScan.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
+                }
+                if (!Devices.Any(d => d.Device.Id.ToString() == a.Device.Id.ToString()) && !string.IsNullOrEmpty(a.Device.Name) && DeviceConnected?.Name != a.Device.Name)
+                {
+                    Devices.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
                 }
             };
 
-            _adapter.DeviceConnected += async (s, a) =>
+            _adapter.DeviceConnected += (s, a) =>
             {
-                System.Diagnostics.Debug.WriteLine($"Connect ==> {a.Device.Name} - {a.Device.Rssi}");
-                foreach (var dev in Devices)
+                if (DeviceConnected?.Name != a.Device.Name)
                 {
-                    if (dev.Id.ToString() == a.Device.Id.ToString())
-                    {
-                        dev.IsConnected = true;
-                        _deviceConnected = dev;
-                        await GetDeviceServicesAndCharacteristicsAsync(dev);
-                    }
+                    DeviceConnected = new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi };
                 }
+                DeviceConnected.IsConnecting = false;
+                DeviceConnected.IsConnected = true;
+                OnPropertyChanged(nameof(DeviceConnected));
             };
 
             _adapter.DeviceDisconnected += (s, a) =>
             {
-                System.Diagnostics.Debug.WriteLine($"Disconnected ==> {a.Device.Name}");
-                foreach (var dev in Devices)
-                {
-                    if (dev.Id.ToString() == a.Device.Id.ToString())
-                    {
-                        dev.IsConnected = false;
-                    }
-                }
+                if (a.Device.Name == DeviceConnected?.Name) DeviceConnected = null;
             };
-
-            _bluetoothLe.StateChanged += (sender, args) =>
-            {
-                if (_bluetoothLe.IsOn)
-                {
-                    MainThread.BeginInvokeOnMainThread(async () =>
-                    {
-                        await ScanForDevicesAsync();
-                        SortDevicesByRssi();
-                    });
-                }
-            };
+            _ = ScanForDevicesAsync();
         }
 
         public async Task ScanForDevicesAsync()
         {
-            if (!_bluetoothLe.IsOn) return;
-            Devices.Clear();
-            await _adapter.StartScanningForDevicesAsync();
+            while (true)
+            {
+                if (_bluetoothLe.IsOn)
+                {
+                    await _adapter.StartScanningForDevicesAsync();
+                    await Task.Delay(5000);
+                    await _adapter.StopScanningForDevicesAsync();
+                    UpdateDevices();
+                    await Task.Delay(100);
+                }
+                else await Task.Delay(1000);
+            }
         }
 
         public async Task ConnectToDeviceAsync(BluetoothDevice device)
         {
-            if (device.IsConnected || device.IsConnecting) return;
-            if (_deviceConnected != null)
+            if (device.Name == DeviceConnected?.Name)
             {
-                await DisConnectToDeviceAsync(_deviceConnected);
+                await DisConnectToDeviceAsync(device);
             }
-            device.IsConnecting = true;
-            await _adapter.ConnectToDeviceAsync(device.Device);
-            device.IsConnecting = false;
+            else
+            {
+                IsDeviceConnected = true;
+                OnPropertyChanged(nameof(IsDeviceConnected));
+                if(DeviceConnected != null)
+                {
+                    Devices.Add(DeviceConnected);
+                }
+                DeviceConnected = device;
+                DeviceConnected.IsConnecting = true;
+                DeviceConnected.IsConnected = false;
+                Devices.Remove(DeviceConnected);
+                OnPropertyChanged(nameof(DeviceConnected));
+                await _adapter.ConnectToDeviceAsync(device.Device);
+            }
         }
 
         public async Task DisConnectToDeviceAsync(BluetoothDevice device)
         {
-            _deviceConnected = null;
-            device.IsConnected = false;
+            IsDeviceConnected = false;
+            OnPropertyChanged(nameof(IsDeviceConnected));
+            Devices.Add(device);
             await _adapter.DisconnectDeviceAsync(device.Device);
         }
 
-        public void SortDevicesByRssi()
+        private void UpdateDevices()
         {
-            var sortedDevices = Devices.OrderByDescending(d => d.Rssi).ToList();
-            Devices.Clear();
-            foreach (var device in sortedDevices)
+            var devicesToRemove = Devices.Where(d => IsRemove(d.Device)).ToList();
+            foreach (var device in devicesToRemove)
             {
-                Devices.Add(device);
+                Devices.Remove(device);
             }
+            foreach (var scanDevice in DevicesScan)
+            {
+                if (!Contains(scanDevice.Device) && scanDevice.Name != DeviceConnected?.Name)
+                {
+                    Devices.Add(scanDevice);
+                }
+            }
+            DevicesScan.Clear();
         }
 
         private async Task GetDeviceServicesAndCharacteristicsAsync(BluetoothDevice device)
@@ -150,5 +167,19 @@ namespace Bluetooth.Services
             }
         }
 
+        private bool Contains(IDevice device)
+        {
+            return Devices.Any(d => d.Device.Name == device.Name);
+        }
+
+        private bool IsRemove(IDevice device)
+        {
+            return !DevicesScan.Any(d => d.Device.Name == device.Name);
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
