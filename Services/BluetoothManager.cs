@@ -25,11 +25,11 @@ namespace Bluetooth.Services
 
             _adapter.DeviceDiscovered += (s, a) =>
             {
-                if (!DevicesScan.Any(d => d.Device.Id.ToString() == a.Device.Id.ToString()) && !string.IsNullOrEmpty(a.Device.Name))
+                if (!DevicesScan.Any(d => d.Device.Name == a.Device.Name) && !string.IsNullOrEmpty(a.Device.Name))
                 {
                     DevicesScan.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
                 }
-                if (!Devices.Any(d => d.Device.Id.ToString() == a.Device.Id.ToString()) && !string.IsNullOrEmpty(a.Device.Name) && DeviceConnected?.Name != a.Device.Name)
+                if (!Devices.Any(d => d.Device.Name == a.Device.Name) && !string.IsNullOrEmpty(a.Device.Name) && DeviceConnected?.Name != a.Device.Name)
                 {
                     Devices.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
                 }
@@ -79,10 +79,13 @@ namespace Bluetooth.Services
             {
                 IsDeviceConnected = true;
                 OnPropertyChanged(nameof(IsDeviceConnected));
+
                 if(DeviceConnected != null)
                 {
                     Devices.Add(DeviceConnected);
+                    await _adapter.DisconnectDeviceAsync(DeviceConnected.Device);
                 }
+
                 DeviceConnected = device;
                 DeviceConnected.IsConnecting = true;
                 DeviceConnected.IsConnected = false;
