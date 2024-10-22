@@ -1,38 +1,32 @@
 ﻿<Properties StartupConfiguration="{21257539-AFC9-4F9A-BD30-B3029F2C36F6}|Default">
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
-  </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="MyAppleMacCatalystID" />
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <Debugger.DebugSourceFolders>
-    <String>/Volumes/Disk2/Bluetooth</String>
-    <String>/Users/sanglv/Desktop/Me/Maui-Bluetooth</String>
-  </Debugger.DebugSourceFolders>
-  <MonoDevelop.Ide.Workbench ActiveDocument="Services/BluetoothManager.cs">
-    <Files>
-      <File FileName="Services/BluetoothManager.cs" Line="24" Column="131" />
-      <File FileName="Pages/HomePage/HomePage.xaml.cs" Line="30" Column="59" />
-      <File FileName="Pages/HomePage/HomePage.xaml" Line="8" Column="1" />
-      <File FileName="Models/BluetoothDevice.cs" Line="2" Column="41" />
-    </Files>
+  <MonoDevelop.Ide.Workbench>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
-          <Node name="Bluetooth" expanded="True">
-            <Node name="Bluetooth" expanded="True">
-              <Node name="Models" expanded="True" />
+          <Node name="Bluetooth">
+            <Node name="Bluetooth">
               <Node name="Pages" expanded="True">
                 <Node name="HomePage" expanded="True" />
               </Node>
-              <Node name="Platforms" expanded="True" />
-              <Node name="Services" expanded="True" />
+              <Node name="Platforms" expanded="True">
+                <Node name="iOS" expanded="True" />
+              </Node>
             </Node>
           </Node>
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <Xamarin.Addins.Core.Project ActiveDebugTarget="MyAppleMacCatalystID" />
+  <Debugger.DebugSourceFolders>
+    <String>/Volumes/Disk2/Bluetooth</String>
+    <String>/Users/sanglv/Desktop/Me/Maui-Bluetooth</String>
+  </Debugger.DebugSourceFolders>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <Xamarin.Addins.Core.Project ActiveDebugTarget="MonoDevelop.IPhone.IPhoneDeviceTarget.00008030-000158D00AC0802E" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="MonoDevelop.IPhone.IPhoneDeviceTarget.00008030-000158D00AC0802E" />
 </Properties>

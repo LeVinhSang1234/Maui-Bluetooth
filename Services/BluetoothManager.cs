@@ -1,7 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text;
 using Plugin.BLE;
+using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
+using Plugin.BLE.Abstractions.EventArgs;
 
 namespace Bluetooth.Services
 {
@@ -16,6 +19,8 @@ namespace Bluetooth.Services
         public ObservableCollection<BluetoothDevice> Devices { get; set; }
         public BluetoothDevice? DeviceConnected { get; set; }
 
+        public bool BluetoothEnable => _bluetoothLe.IsOn;
+
         public BluetoothManager()
         {
             _bluetoothLe = CrossBluetoothLE.Current;
@@ -25,13 +30,13 @@ namespace Bluetooth.Services
 
             _adapter.DeviceDiscovered += (s, a) =>
             {
-                if (!DevicesScan.Any(d => d.Device.Name == a.Device.Name) && !string.IsNullOrEmpty(a.Device.Name))
+                if (!DevicesScan.Any(d => d.Device.Name?.Trim() == a.Device.Name?.Trim()) && !string.IsNullOrEmpty(a.Device.Name))
                 {
                     DevicesScan.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
                 }
-                if (!Devices.Any(d => d.Device.Name == a.Device.Name) && !string.IsNullOrEmpty(a.Device.Name) && DeviceConnected?.Name != a.Device.Name)
+                if (!Contains(a.Device) && !string.IsNullOrEmpty(a.Device.Name) && DeviceConnected?.Name?.Trim() != a.Device.Name?.Trim())
                 {
-                    Devices.Add(new BluetoothDevice { Name = a.Device.Name, Device = a.Device, Rssi = a.Device.Rssi });
+                    Devices.Add(new BluetoothDevice { Name = a.Device.Name!, Device = a.Device, Rssi = a.Device.Rssi });
                 }
             };
 
@@ -44,12 +49,14 @@ namespace Bluetooth.Services
                 DeviceConnected.IsConnecting = false;
                 DeviceConnected.IsConnected = true;
                 OnPropertyChanged(nameof(DeviceConnected));
+                _ = GetDeviceServicesAndCharacteristicsAsync(DeviceConnected);
             };
 
             _adapter.DeviceDisconnected += (s, a) =>
             {
                 if (a.Device.Name == DeviceConnected?.Name) DeviceConnected = null;
             };
+
             _ = ScanForDevicesAsync();
         }
 
@@ -57,6 +64,7 @@ namespace Bluetooth.Services
         {
             while (true)
             {
+                OnPropertyChanged(nameof(BluetoothEnable));
                 if (_bluetoothLe.IsOn)
                 {
                     await _adapter.StartScanningForDevicesAsync();
@@ -65,7 +73,17 @@ namespace Bluetooth.Services
                     UpdateDevices();
                     await Task.Delay(100);
                 }
-                else await Task.Delay(1000);
+                else
+                {
+                    Devices.Clear();
+                    DevicesScan.Clear();
+                    if(IsDeviceConnected)
+                    {
+                        IsDeviceConnected = false;
+                        OnPropertyChanged(nameof(DeviceConnected));
+                    }
+                    await Task.Delay(1000);
+                }
             }
         }
 
@@ -80,7 +98,7 @@ namespace Bluetooth.Services
                 IsDeviceConnected = true;
                 OnPropertyChanged(nameof(IsDeviceConnected));
 
-                if(DeviceConnected != null)
+                if (DeviceConnected != null)
                 {
                     Devices.Add(DeviceConnected);
                     await _adapter.DisconnectDeviceAsync(DeviceConnected.Device);
@@ -112,7 +130,7 @@ namespace Bluetooth.Services
             }
             foreach (var scanDevice in DevicesScan)
             {
-                if (!Contains(scanDevice.Device) && scanDevice.Name != DeviceConnected?.Name)
+                if (!Contains(scanDevice.Device) && scanDevice.Name.Trim() != DeviceConnected?.Name.Trim())
                 {
                     Devices.Add(scanDevice);
                 }
@@ -150,16 +168,21 @@ namespace Bluetooth.Services
 
                     foreach (var characteristic in characteristics)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Characteristic: {characteristic.Uuid}");
-                        var result = await characteristic.ReadAsync();
-                        if (result.data.Length > 0)
+                        bool supportsRead = (characteristic.Properties & CharacteristicPropertyType.Read) != 0;
+                        bool supportsNotify = (characteristic.Properties & CharacteristicPropertyType.Notify) != 0;
+                        if(supportsRead)
                         {
-                            var value = BitConverter.ToString(result.data).Replace("-", " ");
-                            System.Diagnostics.Debug.WriteLine($"Value: {value}");
+                            System.Diagnostics.Debug.WriteLine($"Characteristic: {characteristic.Uuid}");
+                            var result = await characteristic.ReadAsync();
+                            if (result.data.Length > 0)
+                            {
+                                var value = BitConverter.ToString(result.data).Replace("-", " ");
+                                System.Diagnostics.Debug.WriteLine($"Value: {HexToString(value)}");
+                            }
                         }
-                        else
+                        if(supportsNotify)
                         {
-                            System.Diagnostics.Debug.WriteLine("No value returned for this characteristic.");
+                            characteristic.ValueUpdated += Characteristic_ValueUpdated!;
                         }
                     }
                 }
@@ -172,17 +195,41 @@ namespace Bluetooth.Services
 
         private bool Contains(IDevice device)
         {
-            return Devices.Any(d => d.Device.Name == device.Name);
+            return Devices.Any(d => d.Device?.Name?.Trim() == device.Name?.Trim());
         }
 
         private bool IsRemove(IDevice device)
         {
-            return !DevicesScan.Any(d => d.Device.Name == device.Name);
+            return !DevicesScan.Any(d => d.Device.Name.Trim() == device.Name?.Trim());
         }
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private string HexToString(string hex)
+        {
+            hex = hex.Replace(" ", "");
+            if (hex.Length % 2 != 0)
+            {
+                throw new ArgumentException("Invalid hex string length.");
+            }
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < hex.Length; i += 2)
+            {
+                string byteValue = hex.Substring(i, 2);
+                result.Append((char)Convert.ToByte(byteValue, 16));
+            }
+
+            return result.ToString();
+        }
+
+        private void Characteristic_ValueUpdated(object sender, CharacteristicUpdatedEventArgs e)
+        {
+            var value = e.Characteristic.Value;
+            string receivedString = Encoding.UTF8.GetString(value);
+            Console.WriteLine($"Received Notification: {HexToString(receivedString)}");
         }
     }
 }
