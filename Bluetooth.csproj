@@ -64,15 +64,16 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-		<PackageReference Include="Plugin.BLE" Version="3.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <None Remove="Services\" />
 	  <None Remove="Exceptions\" />
+	  <None Remove="Models\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Services\" />
 	  <Folder Include="Exceptions\" />
+	  <Folder Include="Models\" />
 	</ItemGroup>
 </Project>
