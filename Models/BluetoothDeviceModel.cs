@@ -1,5 +1,4 @@
-﻿using System;
-using Android.Bluetooth;
+﻿using Android.Bluetooth;
 
 namespace Bluetooth.Models
 {
@@ -11,6 +10,7 @@ namespace Bluetooth.Models
         public bool Visible => !string.IsNullOrEmpty(DisplayName);
         public bool IsConnecting { get; set; }
         public bool IsConnected { get; set; }
+        public string BatteryLevel { get; set; }
     }
 }
 

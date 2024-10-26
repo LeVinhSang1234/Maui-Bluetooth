@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Text;
 using Android.Bluetooth;
-using Android.Content;
 using Bluetooth.Models;
+using Bluetooth.Services;
 using Java.Util;
 
 namespace Bluetooth.Services
@@ -12,7 +10,6 @@ namespace Bluetooth.Services
     public class BluetoothService : INotifyPropertyChanged
     {
         private readonly BluetoothAdapter _adapter;
-        private ObservableCollection<BluetoothDeviceModel> DevicesScan;
         private BluetoothSocket _socket;
         private BluetoothGatt _bluetoothGatt;
 
@@ -28,109 +25,73 @@ namespace Bluetooth.Services
             _adapter = BluetoothAdapter.DefaultAdapter;
             OnPropertyChanged(nameof(IsBluetoothEnabled));
             Devices = new ObservableCollection<BluetoothDeviceModel>();
-            DevicesScan = new ObservableCollection<BluetoothDeviceModel>();
-            _ = StartScanAsync();
+            _ = ConnectToIphone();
         }
 
-        public async Task StartScanAsync()
+        public async Task ConnectToIphone()
         {
-            while (true)
+            await RequestPermission();
+            var pairedDevices = _adapter.BondedDevices;
+            if (pairedDevices != null && pairedDevices.Count > 0)
             {
-                OnPropertyChanged(nameof(IsBluetoothEnabled));
-                bool allowBluetooth = await RequestPermission();
-                if (!allowBluetooth)
+                var device = pairedDevices.FirstOrDefault(d => d.Address == "88:64:40:2A:4B:E7");
+                if (device != null)
                 {
-                    await Task.Delay(1000);
-                    continue;
-                };
-                if (!isScanning)
-                {
-                    isScanning = true;
-                    OnPropertyChanged(nameof(isScanning));
+                    Devices.Add(new BluetoothDeviceModel()
+                    {
+                        Device = device
+                    });
+
                 }
-                var receiver = new BluetoothDeviceReceiver(Devices);
-                var _receiver = new BluetoothDeviceReceiver(DevicesScan);
-
-                Platform.CurrentActivity!.RegisterReceiver(receiver, new IntentFilter(BluetoothDevice.ActionFound));
-                Platform.CurrentActivity!.RegisterReceiver(_receiver, new IntentFilter(BluetoothDevice.ActionFound));
-
-                _adapter.StartDiscovery();
-                await Task.Delay(10000);
-                _adapter.CancelDiscovery();
-                Platform.CurrentActivity.UnregisterReceiver(receiver);
-                Platform.CurrentActivity.UnregisterReceiver(_receiver);
-
-                await UpdateDeviceList();
-                await Task.Delay(1000);
             }
         }
 
-        private async Task UpdateDeviceList()
+        public void UpdateBatteryLevel(int batteryLevel)
         {
-            var devicesToRemove = Devices.Where(device => !DevicesScan.Any(d => d.Device.Address == device.Device.Address)).ToList();
-            foreach (var device in devicesToRemove)
+            if(DeviceConnected != null)
             {
-                Devices.Remove(device);
+                DeviceConnected.IsConnecting = false;
+                DeviceConnected.IsConnected = true;
+                DeviceConnected.BatteryLevel = $"BatteryLevel {batteryLevel}%";
+                OnPropertyChanged(nameof(DeviceConnected));
             }
-            await Task.Delay(1000);
-            OnPropertyChanged(nameof(Devices));
-            DevicesScan.Clear();
         }
 
-        // connect with socket. If devices support.
+
+        public void ConnectGatFail(GattStatus status)
+        {
+            string message = $"Status Fail: {status}";
+            DeviceConnected = null;
+            OnPropertyChanged(nameof(DeviceConnected));
+            OnPropertyChanged(nameof(IsConnecting));
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await Application.Current.MainPage.DisplayAlert("Connect to Gatt failed!", $"Status Fail {status}", "OK");
+            });
+        }
+
         public async Task ConnectSocketToDevice(BluetoothDeviceModel device)
         {
+            if(_bluetoothGatt != null)
+            {
+                _bluetoothGatt.Disconnect();
+            }
             DeviceConnected = device;
             OnPropertyChanged(nameof(IsConnecting));
             try
             {
-                // List bluetooth connected.
-                var pairedDevices = _adapter.BondedDevices;
-                if (pairedDevices != null && pairedDevices.Count > 0)
+                var uuids = device.Device.GetUuids();
+                foreach(var uuid in uuids)
                 {
-                    foreach (BluetoothDevice d in pairedDevices)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"pair {d.Name}");
-                    }
+                    System.Diagnostics.Debug.WriteLine($"uuid {uuid}");
                 }
-                var serviceUuid = UUID.FromString("0000110B-0000-1000-8000-00805F9B34FB"); // Any service device support.
-                var characteristicUuid = UUID.FromString("00002a00-0000-1000-8000-00805f9b34fb"); // Any characteristic device support.
-                var uuids = DeviceConnected.Device.GetUuids();
-                if (uuids != null)
-                {
-                    foreach (var uuid in uuids)
-                    {
-                        System.Diagnostics.Debug.WriteLine(uuid);
-                    }
-                }
-                else System.Diagnostics.Debug.WriteLine("null lllll");
 
-                _socket = DeviceConnected.Device.CreateRfcommSocketToServiceRecord(serviceUuid);
-                if (BluetoothAdapter.DefaultAdapter.IsDiscovering)
-                {
-                    BluetoothAdapter.DefaultAdapter.CancelDiscovery();
-                }
                 DeviceConnected.IsConnecting = true;
                 OnPropertyChanged(nameof(DeviceConnected));
+
                 try
                 {
-                    await _socket.ConnectAsync();
-
-                    DeviceConnected.IsConnecting = false;
-                    DeviceConnected.IsConnected = true;
-
-                    _bluetoothGatt = DeviceConnected.Device.ConnectGatt(Android.App.Application.Context, true, new GattCallback());
-                    var service = _bluetoothGatt.GetService(serviceUuid);
-                    if (service != null)
-                    {
-                        var characteristic = service.GetCharacteristic(characteristicUuid);
-                        if (characteristic != null)
-                        {
-                            var value = characteristic.GetValue();
-                            System.Diagnostics.Debug.WriteLine($"Characteristic Value: {Encoding.UTF8.GetString(value)}");
-                        }
-                    }
-
+                    _bluetoothGatt = device.Device.ConnectGatt(Android.App.Application.Context, false, new GattCallback(this));
                 }
                 catch (Exception e)
                 {
@@ -145,38 +106,6 @@ namespace Bluetooth.Services
             {
                 System.Diagnostics.Debug.WriteLine("Error connecting to device: " + ex.Message);
                 _socket?.Close();
-            }
-        }
-
-        public void Disconnect()
-        {
-            if (_socket != null && _socket.IsConnected)
-            {
-                _socket.Close();
-                _socket.Dispose();
-                System.Diagnostics.Debug.WriteLine("Disconnect");
-            }
-        }
-
-        private async void StartListening()
-        {
-            var buffer = new byte[1024];
-            while (_socket.IsConnected)
-            {
-                try
-                {
-                    int bytesRead = await _socket.InputStream.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead > 0)
-                    {
-                        var data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        System.Diagnostics.Debug.WriteLine($"Received data: {data}");
-                    }
-                }
-                catch (IOException ex)
-                {
-                    Console.WriteLine($"Error reading from socket: {ex.Message}");
-                    break;
-                }
             }
         }
 
@@ -200,68 +129,34 @@ namespace Bluetooth.Services
 }
 
 
-public class BluetoothDeviceReceiver : BroadcastReceiver
-{
-    private readonly ObservableCollection<BluetoothDeviceModel> _foundDevices;
-
-    public BluetoothDeviceReceiver(ObservableCollection<BluetoothDeviceModel> foundDevices)
-    {
-        _foundDevices = foundDevices;
-    }
-
-
-    public override void OnReceive(Context context, Intent intent)
-    {
-        var action = intent?.Action;
-
-        if (action == BluetoothDevice.ActionFound)
-        {
-            var device = (BluetoothDevice)intent.GetParcelableExtra(BluetoothDevice.ExtraDevice);
-            if (device != null && !string.IsNullOrEmpty(device.Name?.Trim()))
-            {
-                var rssi = intent.GetShortExtra(BluetoothDevice.ExtraRssi, 0);
-                var existingDevice = _foundDevices.FirstOrDefault(d => d.Device.Address == device.Address);
-                if (existingDevice != null)
-                {
-                    existingDevice.Rssi = rssi;
-                }
-                else
-                {
-                    _foundDevices.Add(new BluetoothDeviceModel()
-                    {
-                        Device = device,
-                        Rssi = rssi,
-                    });
-                }
-            }
-        }
-    }
-}
-
 public class GattCallback : BluetoothGattCallback
 {
+    private BluetoothService _bluetoothService;
+
+    public GattCallback(BluetoothService bluetoothService)
+    {
+        _bluetoothService = bluetoothService;
+    }
+
     public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
     {
-        base.OnConnectionStateChange(gatt, status, newState);
-        if (newState == ProfileState.Connected)
+        if (status == GattStatus.Success && newState == ProfileState.Connected)
         {
-            gatt.DiscoverServices();
-        }
+            gatt.DiscoverServices(); 
+        } else _bluetoothService.ConnectGatFail(status);
     }
 
     public override void OnServicesDiscovered(BluetoothGatt gatt, GattStatus status)
     {
-        base.OnServicesDiscovered(gatt, status);
         if (status == GattStatus.Success)
         {
-            foreach (var service in gatt.Services)
+            var batteryService = gatt.GetService(UUID.FromString("0000180F-0000-1000-8000-00805f9b34fb"));  // Battery Service
+            if (batteryService != null)
             {
-                Console.WriteLine("Service: " + service.Uuid);
-
-                foreach (var characteristic in service.Characteristics)
+                var batteryLevelCharacteristic = batteryService.GetCharacteristic(UUID.FromString("00002A19-0000-1000-8000-00805f9b34fb")); // Battery Level
+                if (batteryLevelCharacteristic != null)
                 {
-                    Console.WriteLine("Characteristic: " + characteristic.Uuid);
-                    gatt.ReadCharacteristic(characteristic);
+                    gatt.ReadCharacteristic(batteryLevelCharacteristic);
                 }
             }
         }
@@ -269,11 +164,18 @@ public class GattCallback : BluetoothGattCallback
 
     public override void OnCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, GattStatus status)
     {
-        base.OnCharacteristicRead(gatt, characteristic, status);
         if (status == GattStatus.Success)
         {
-            var value = characteristic.GetStringValue(0);
-            Console.WriteLine("Characteristic Value: " + value);
+            var batteryLevel = characteristic.GetValue();
+            if (batteryLevel != null && batteryLevel.Length > 0)
+            {
+                var batteryValue = batteryLevel[0];
+                _bluetoothService.UpdateBatteryLevel(batteryValue);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Battery Level characteristic is empty.");
+            }
         }
     }
 }
