@@ -1,3 +1,4 @@
+using Bluetooth.Models;
 using Bluetooth.Services;
 
 namespace Bluetooth.Pages
@@ -11,7 +12,8 @@ namespace Bluetooth.Pages
             InitializeComponent();
             try
             {
-                BindingContext = new BluetoothService();
+                bluetoothService = new BluetoothService();
+                BindingContext = bluetoothService;
             }
             catch (Exception e)
             {
@@ -22,6 +24,8 @@ namespace Bluetooth.Pages
         private void DevicesListView_ItemTapped(object sender, ItemTappedEventArgs e)
         {
             if (e.Item == null) return;
+            BluetoothDeviceModel Item = (BluetoothDeviceModel)e.Item;
+            _ = bluetoothService!.ConnectSocketToDevice((Item));
         }
     }
 

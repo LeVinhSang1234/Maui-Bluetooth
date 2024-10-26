@@ -5,12 +5,12 @@
         Title="Bluetooth">
 
     <StackLayout Background="Transparent">
-        <FlexLayout IsVisible="{Binding IsDeviceConnected}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+        <FlexLayout IsVisible="{Binding IsConnecting}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
             <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
         </FlexLayout>
-        <FlexLayout IsVisible="{Binding IsDeviceConnected}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
-            <Label Text="{Binding DeviceConnected.Name}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-            <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />
+        <FlexLayout IsVisible="{Binding IsConnecting}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
+            <Label Text="{Binding DeviceConnected.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+            <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" />
             <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="Connected" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
         </FlexLayout>
         <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
