@@ -1,27 +1,29 @@
 ﻿<Properties StartupConfiguration="{21257539-AFC9-4F9A-BD30-B3029F2C36F6}|Default">
-  <MonoDevelop.MonoDroid LastDeploySdkVersion="34.0.43" />
-  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="Android.0C101FDD4007H8" />
-  <Debugger.DebugSourceFolders>
-    <String>/Volumes/Disk2/Bluetooth</String>
-    <String>/Users/sanglv/Desktop/Me/Maui-Bluetooth</String>
-  </Debugger.DebugSourceFolders>
+  <Xamarin.Addins.Core.Project ActiveDebugTarget="Android.0C101FDD4007H8" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MultiItemStartupConfigurations />
-  <Xamarin.Addins.Core.Project ActiveDebugTarget="Android.0C101FDD4007H8" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Services/BluetoothService.cs">
+  <MonoDevelop.MonoDroid LastDeploySdkVersion="34.0.43" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Pages/HomePage/HomePage.xaml.cs">
     <Files>
-      <File FileName="Services/BluetoothService.cs" Line="53" Column="44" />
+      <File FileName="Pages/HomePage/HomePage.xaml.cs" Line="24" Column="35" IsPinned="True" />
+      <File FileName="Services/BluetoothService.cs" Line="19" Column="73" />
+      <File FileName="Models/BluetoothDeviceModel.cs" Line="9" Column="40" />
+      <File FileName="Pages/HomePage/HomePage.xaml" Line="9" Column="62" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="Bluetooth">
             <Node name="Bluetooth">
-              <Node name="Services" expanded="True">
-                <Node name="BluetoothService.cs" selected="True" />
+              <Node name="Models" expanded="True" />
+              <Node name="Pages">
+                <Node name="HomePage">
+                  <Node name="HomePage.xaml">
+                    <Node name="HomePage.xaml.cs" selected="True" />
+                  </Node>
+                </Node>
               </Node>
             </Node>
           </Node>
@@ -29,5 +31,11 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MultiItemStartupConfigurations />
+  <Debugger.DebugSourceFolders>
+    <String>/Volumes/Disk2/Bluetooth</String>
+    <String>/Users/sanglv/Desktop/Me/Maui-Bluetooth</String>
+  </Debugger.DebugSourceFolders>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="Android.0C101FDD4007H8" />
 </Properties>

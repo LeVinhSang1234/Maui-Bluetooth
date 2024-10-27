@@ -4,49 +4,30 @@
              x:Class="Bluetooth.Pages.HomePage"
         Title="Bluetooth">
 
-    <StackLayout Background="Transparent">
-        <FlexLayout IsVisible="{Binding IsConnecting}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
-            <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
-        </FlexLayout>
-        <FlexLayout IsVisible="{Binding IsConnecting}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
-            <Label Text="{Binding DeviceConnected.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-            <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" />
-            <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="{Binding DeviceConnected.BatteryLevel}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-        </FlexLayout>
-        <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
-            <Label Text="Devices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-            <ActivityIndicator IsVisible="{Binding isScanning}" IsRunning="{Binding IsBluetoothEnabled}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" Margin="0, 0, 0, 0"/>
-        </FlexLayout>
-        <Label Text="Please, Turn on Bluetooth..."  VerticalOptions="Center" HorizontalOptions="Center" Margin="20, 20, 10, 0">
-            <Label.Triggers>
-                <DataTrigger TargetType="Label" Binding="{Binding IsBluetoothEnabled}" Value="False">
-                    <Setter Property="IsVisible" Value="True" />
-                </DataTrigger>
-                <DataTrigger TargetType="Label" Binding="{Binding IsBluetoothEnabled}" Value="True">
-                    <Setter Property="IsVisible" Value="False" />
-                </DataTrigger>
-            </Label.Triggers>
-        </Label>
-        <ListView x:Name="DevicesListView"
-                  ItemsSource="{Binding Devices}"
-                  SelectionMode="Single"
-                  Background="Transparent"
-                  ItemTapped="DevicesListView_ItemTapped">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <ViewCell>
-                        <FlexLayout IsVisible="{Binding Visible}" Direction="Row" BackgroundColor="Transparent" JustifyContent="SpaceBetween" Margin="20, 0, 10, 0">
-                            <Label Text="{Binding DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-                            <!--<ActivityIndicator IsRunning="{Binding IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.75" />-->
-                            <!--<Label Text="Connected" IsVisible="{Binding IsConnected}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />-->
-                        </FlexLayout>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <Label x:Name="StatusLabel"
-               Text=""
-               FontSize="18"
-               HorizontalOptions="Center"/>
-    </StackLayout>
+    <ScrollView>
+        <VerticalStackLayout x:Name="Children">
+            <FlexLayout IsVisible="{Binding IsDeviceConnected}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+                <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
+            </FlexLayout>
+            <FlexLayout IsVisible="{Binding IsDeviceConnected}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
+                <Label Text="{Binding DeviceConnected.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" />
+                <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="{Binding DeviceConnected.BatteryLevel}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+            </FlexLayout>
+
+            <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+                <Label Text="MyDevices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                <ActivityIndicator IsRunning="{Binding BluetoothEnable}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" Margin="5, 0, 0, 0"/>
+            </FlexLayout>
+            <FlexLayout x:Name="MyDeviceView" Direction="Column" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+            </FlexLayout>
+
+            <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+                <Label Text="Devices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                <ActivityIndicator IsRunning="{Binding BluetoothEnable}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" Margin="5, 0, 0, 0"/>
+            </FlexLayout>
+            <FlexLayout x:Name="DeviceView" Direction="Column" BackgroundColor="Transparent" Margin="20, 0, 10, 0">
+            </FlexLayout>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
