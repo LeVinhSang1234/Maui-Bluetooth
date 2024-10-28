@@ -1,4 +1,5 @@
-﻿using Android.Bluetooth;
+﻿#if ANDROID
+using Android.Bluetooth;
 using Android.Content;
 using Bluetooth.Models;
 using Bluetooth.Services;
@@ -37,18 +38,7 @@ namespace Bluetooth.Services
         public async Task getDevices()
         {
             await RequestPermission();
-            var pairedDevices = _adapter.BondedDevices;
-            if (pairedDevices != null && pairedDevices.Count > 0)
-            {
-                foreach (var device in pairedDevices)
-                {
-                    var _device = new BluetoothDeviceModel()
-                    {
-                        Device = device
-                    };
-                    OnMyDeviceAdded?.Invoke(_device);
-                }
-            }
+           
             _ = StartScanAsync();
         }
 
@@ -62,6 +52,19 @@ namespace Bluetooth.Services
                     await Task.Delay(1000);
                     continue;
                 };
+                var pairedDevices = _adapter.BondedDevices;
+                if (pairedDevices != null && pairedDevices.Count > 0)
+                {
+                    foreach (var device in pairedDevices)
+                    {
+                        var _device = new BluetoothDeviceModel()
+                        {
+                            Device = device
+                        };
+                        OnMyDeviceAdded?.Invoke(_device);
+                    }
+                }
+
                 var _receiver = new BluetoothDeviceReceiver(this);
                 Platform.CurrentActivity!.RegisterReceiver(_receiver, new IntentFilter(BluetoothDevice.ActionFound));
                 _adapter.StartDiscovery();
@@ -94,7 +97,7 @@ namespace Bluetooth.Services
             OnDeviceConnectFail?.Invoke(device, message);
         }
 
-        public async void ConnectSocketToDevice(BluetoothDeviceModel device)
+        public async void ConnectToDevice(BluetoothDeviceModel device)
         {
             if (_bluetoothGatt != null)
             {
@@ -243,3 +246,4 @@ public class BluetoothDeviceReceiver : BroadcastReceiver
         }
     }
 }
+#endif
