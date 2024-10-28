@@ -12,7 +12,7 @@
             <FlexLayout IsVisible="{Binding IsDeviceConnected}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
                 <Label Text="{Binding DeviceConnected.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
                 <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" />
-                <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="{Binding DeviceConnected.BatteryLevel}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="{Binding DeviceConnected.Result}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
             </FlexLayout>
 
             <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 0, 0">

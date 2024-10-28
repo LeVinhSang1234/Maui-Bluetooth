@@ -11,12 +11,14 @@ namespace Bluetooth.Services
         private readonly BluetoothAdapter _adapter;
         private BluetoothSocket _socket;
         private BluetoothGatt _bluetoothGatt;
+        private BluetoothManager _bluetoothManager;
 
         public event Action<BluetoothDeviceModel>? OnMyDeviceAdded;
         public event Action<BluetoothDeviceModel?>? OnDeviceConnecting;
         public event Action<BluetoothDevice>? OnDeviceConnected;
+        public event Action<BluetoothDevice>? OnDisconnecting;
         public event Action<BluetoothDevice?, string>? OnDeviceConnectFail;
-        public event Action<int>? OnBatteryLevel;
+        public event Action<string?>? OnMessage;
         public event Action<BluetoothDeviceModel>? OnDeviceScan;
         public event Action? OnEndDeviceScan;
         public event Action? OnStartDeviceScan;
@@ -28,6 +30,7 @@ namespace Bluetooth.Services
         public BluetoothService()
         {
             _adapter = BluetoothAdapter.DefaultAdapter;
+            _bluetoothManager = (BluetoothManager)Android.App.Application.Context.GetSystemService(Context.BluetoothService);
             _ = getDevices();
         }
 
@@ -78,7 +81,7 @@ namespace Bluetooth.Services
 
         public void UpdateBatteryLevel(int batteryLevel)
         {
-            OnBatteryLevel?.Invoke(batteryLevel);
+            OnMessage?.Invoke($"BatteryLevel {batteryLevel}%");
         }
 
         public void Connected(BluetoothDevice device)
@@ -91,8 +94,21 @@ namespace Bluetooth.Services
             OnDeviceConnectFail?.Invoke(device, message);
         }
 
-        public void ConnectSocketToDevice(BluetoothDeviceModel device)
+        public async void ConnectSocketToDevice(BluetoothDeviceModel device)
         {
+            if (_bluetoothGatt != null)
+            {
+                if (_bluetoothManager.GetConnectionState(_bluetoothGatt.Device, ProfileType.Gatt) == ProfileState.Connected)
+                {
+                    OnMessage?.Invoke("Disconnecting...");
+                }
+                while (_bluetoothManager.GetConnectionState(_bluetoothGatt.Device, ProfileType.Gatt) == ProfileState.Connected)
+                {
+                    _bluetoothGatt!.Disconnect();
+                    await Task.Delay(1000);
+                }
+                OnMessage?.Invoke(null);
+            }
             OnDeviceConnecting?.Invoke(device);
             try
             {
@@ -134,20 +150,35 @@ namespace Bluetooth.Services
 public class GattCallback : BluetoothGattCallback
 {
     private BluetoothService _bluetoothService;
+    private BluetoothManager bluetoothManager;
 
     public GattCallback(BluetoothService bluetoothService)
     {
         _bluetoothService = bluetoothService;
+        bluetoothManager = (BluetoothManager)Android.App.Application.Context.GetSystemService(Context.BluetoothService);
+
+    }
+
+    private async void getBattery(BluetoothGatt gatt)
+    {
+        while (gatt != null && bluetoothManager.GetConnectionState(gatt.Device, ProfileType.Gatt) == ProfileState.Connected)
+        {
+            gatt.DiscoverServices();
+            await Task.Delay(2000);
+        }
     }
 
     public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
     {
         if (status == GattStatus.Success && newState == ProfileState.Connected)
         {
-            gatt.DiscoverServices();
+            getBattery(gatt);
             _bluetoothService.Connected(gatt.Device!);
         }
-        else _bluetoothService.ConnectGatFail(gatt.Device!, $"Status Fail: {status}");
+        else if (status != GattStatus.Success)
+        {
+            _bluetoothService.ConnectGatFail(gatt.Device!, $"Status Fail: {status}");
+        }
     }
 
     public override void OnServicesDiscovered(BluetoothGatt gatt, GattStatus status)
@@ -161,8 +192,10 @@ public class GattCallback : BluetoothGattCallback
                 if (batteryLevelCharacteristic != null)
                 {
                     gatt.ReadCharacteristic(batteryLevelCharacteristic);
-                } else System.Diagnostics.Debug.WriteLine("Battery Level characteristic not found.");
-            } else System.Diagnostics.Debug.WriteLine("Battery Service characteristic not found.");
+                }
+                else System.Diagnostics.Debug.WriteLine("Battery Level characteristic not found.");
+            }
+            else System.Diagnostics.Debug.WriteLine("Battery Service characteristic not found.");
         }
     }
 

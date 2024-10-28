@@ -22,15 +22,21 @@ namespace Bluetooth.Pages
             Devices = new List<BluetoothDeviceModel>();
             MyDevices = new List<BluetoothDeviceModel>();
 
-            bluetoothService = new BluetoothService();
-            bluetoothService.OnMyDeviceAdded += MyDeviceAdded;
-            bluetoothService.OnDeviceConnecting += OnDeviceConnecting;
-            bluetoothService.OnDeviceConnected += OnDeviceConnected;
-            bluetoothService.OnDeviceConnectFail += OnDeviceConnectFail;
-            bluetoothService.OnBatteryLevel += OnBatteryLevel;
-            bluetoothService.OnDeviceScan += OnDeviceScan;
-            bluetoothService.OnEndDeviceScan += OnEndDeviceScan;
+            if (DeviceInfo.Platform == DevicePlatform.Android)
+            {
+                bluetoothService = new BluetoothService();
+                bluetoothService.OnMyDeviceAdded += MyDeviceAdded;
+                bluetoothService.OnDeviceConnecting += OnDeviceConnecting;
+                bluetoothService.OnDeviceConnected += OnDeviceConnected;
+                //bluetoothService.OnDisconnecting += OnDisconnecting;
+                bluetoothService.OnDeviceConnectFail += OnDeviceConnectFail;
+                bluetoothService.OnMessage += OnMessage;
+                bluetoothService.OnDeviceScan += OnDeviceScan;
+                bluetoothService.OnEndDeviceScan += OnEndDeviceScan;
+            } else
+            {
 
+            }
             BindingContext = this;
         }
 
@@ -64,10 +70,14 @@ namespace Bluetooth.Pages
             });
         }
 
-        private void OnBatteryLevel(int batteryLevel)
+        private void OnMessage(string? message)
         {
             if (DeviceConnected == null) return;
-            DeviceConnected.BatteryLevel = $"BatteryLevel {batteryLevel}%";
+            if(string.IsNullOrEmpty(message))
+            {
+                DeviceConnected.IsConnected = false;
+            }
+            DeviceConnected.Result = message ?? "";
             OnPropertyChanged(nameof(DeviceConnected));
         }
 
@@ -82,6 +92,7 @@ namespace Bluetooth.Pages
             }
             DeviceConnected.IsConnecting = false;
             DeviceConnected.IsConnected = true;
+            DeviceConnected.Result = "Connected";
             OnPropertyChanged(nameof(DeviceConnected));
         }
 
