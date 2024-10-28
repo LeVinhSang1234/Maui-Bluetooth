@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Android.Bluetooth;
 using Bluetooth.Models;
@@ -8,19 +7,20 @@ namespace Bluetooth.Pages
 {
     public partial class HomePage : ContentPage, INotifyPropertyChanged
     {
-        private BluetoothDeviceModel? _deviceConnected;
         public BluetoothService? bluetoothService;
         public List<BluetoothDeviceModel> DevicesScan;
         public List<BluetoothDeviceModel> Devices;
-        public bool IsDeviceConnected { get; set; }
-        public BluetoothDeviceModel? DeviceConnected { get; set; }
+        public List<BluetoothDeviceModel> MyDevices;
 
+        public BluetoothDeviceModel? DeviceConnected { get; set; }
+        public bool IsDeviceConnected { get; set; }
 
         public HomePage()
         {
             InitializeComponent();
             DevicesScan = new List<BluetoothDeviceModel>();
             Devices = new List<BluetoothDeviceModel>();
+            MyDevices = new List<BluetoothDeviceModel>();
 
             bluetoothService = new BluetoothService();
             bluetoothService.OnMyDeviceAdded += MyDeviceAdded;
@@ -29,6 +29,7 @@ namespace Bluetooth.Pages
             bluetoothService.OnDeviceConnectFail += OnDeviceConnectFail;
             bluetoothService.OnBatteryLevel += OnBatteryLevel;
             bluetoothService.OnDeviceScan += OnDeviceScan;
+            bluetoothService.OnEndDeviceScan += OnEndDeviceScan;
 
             BindingContext = this;
         }
@@ -36,8 +37,8 @@ namespace Bluetooth.Pages
         private void OnDeviceScan(BluetoothDeviceModel device)
         {
             var _deviceScan = DevicesScan.FirstOrDefault(d => d.Device.Address == device.Device.Address);
-            var isMyDevice = Devices.FirstOrDefault(d => d.Device.Address == device.Device.Address);
-            if (_deviceScan == null && isMyDevice == null)
+            var isMyDevice = MyDevices.FirstOrDefault(d => d.Device.Address == device.Device.Address);
+            if (_deviceScan == null && isMyDevice == null && !string.IsNullOrEmpty(device.Device.Name))
             {
                 DeviceAdded(device);
             }
@@ -86,30 +87,8 @@ namespace Bluetooth.Pages
 
         private void MyDeviceAdded(BluetoothDeviceModel myDevice)
         {
+            MyDevices.Add(myDevice);
             MyDeviceView.Children.Add(new Label
-            {
-                Text = myDevice.DisplayName,
-                VerticalOptions = LayoutOptions.Center,
-                HorizontalOptions = LayoutOptions.Start,
-                GestureRecognizers =
-                {
-                    new TapGestureRecognizer
-                    {
-                        Command = new Command(() =>
-                        {
-                            OnSelectDevice(myDevice);
-                        })
-                    }
-                }
-            });
-        }
-
-        private void DeviceAdded(BluetoothDeviceModel myDevice)
-        {
-            DevicesScan.Add(myDevice);
-            Devices.Add(myDevice);
-
-            DeviceView.Children.Add(new Label
             {
                 Text = myDevice.DisplayName,
                 VerticalOptions = LayoutOptions.Center,
@@ -125,12 +104,52 @@ namespace Bluetooth.Pages
                         })
                     }
                 }
-            }); ;
+            });
+        }
+
+        private void DeviceAdded(BluetoothDeviceModel myDevice)
+        {
+            if(!Devices.Any(d => d.Device.Address == myDevice.Device.Address)) {
+                DeviceView.Children.Add(new Label
+                {
+                    Text = myDevice.DisplayName,
+                    VerticalOptions = LayoutOptions.Center,
+                    HorizontalOptions = LayoutOptions.Start,
+                    Margin = new Thickness(0, 8, 8, 0),
+                    GestureRecognizers =
+                {
+                    new TapGestureRecognizer
+                    {
+                        Command = new Command(() =>
+                        {
+                            OnSelectDevice(myDevice);
+                        })
+                    }
+                }
+                });
+            }
+            DevicesScan.Add(myDevice);
+            Devices.Add(myDevice);
+
+        }
+
+        private void OnEndDeviceScan()
+        {
+            for (var i = 0; i < Devices.Count; i++)
+            {
+                var _device = Devices[i];
+                if (!DevicesScan.Any(e => e.Device.Address == _device.Device.Address))
+                {
+                    Devices.RemoveAt(i);
+                    DeviceView.Children.RemoveAt(i);
+                }
+            }
+            DevicesScan.Clear();
         }
 
         private void OnSelectDevice(BluetoothDeviceModel device)
         {
-            _ = bluetoothService!.ConnectSocketToDevice(device);
+            bluetoothService!.ConnectSocketToDevice(device);
         }
     }
 

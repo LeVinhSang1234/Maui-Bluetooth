@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Android.Bluetooth;
+﻿using Android.Bluetooth;
 using Android.Content;
 using Bluetooth.Models;
 using Bluetooth.Services;
@@ -19,6 +18,8 @@ namespace Bluetooth.Services
         public event Action<BluetoothDevice?, string>? OnDeviceConnectFail;
         public event Action<int>? OnBatteryLevel;
         public event Action<BluetoothDeviceModel>? OnDeviceScan;
+        public event Action? OnEndDeviceScan;
+        public event Action? OnStartDeviceScan;
 
         public bool isScanning { get; private set; } = false;
         public bool IsBluetoothEnabled => _adapter.IsEnabled;
@@ -61,9 +62,11 @@ namespace Bluetooth.Services
                 var _receiver = new BluetoothDeviceReceiver(this);
                 Platform.CurrentActivity!.RegisterReceiver(_receiver, new IntentFilter(BluetoothDevice.ActionFound));
                 _adapter.StartDiscovery();
+                OnStartDeviceScan?.Invoke();
                 await Task.Delay(10000);
                 _adapter.CancelDiscovery();
                 Platform.CurrentActivity.UnregisterReceiver(_receiver);
+                OnEndDeviceScan?.Invoke();
                 await Task.Delay(1000);
             }
         }
@@ -88,20 +91,11 @@ namespace Bluetooth.Services
             OnDeviceConnectFail?.Invoke(device, message);
         }
 
-        public async Task ConnectSocketToDevice(BluetoothDeviceModel device)
+        public void ConnectSocketToDevice(BluetoothDeviceModel device)
         {
-            if (_bluetoothGatt != null)
-            {
-                _bluetoothGatt.Disconnect();
-            }
             OnDeviceConnecting?.Invoke(device);
             try
             {
-                //var uuids = device.Device.GetUuids();
-                //foreach(var uuid in uuids)
-                //{
-                //    System.Diagnostics.Debug.WriteLine($"uuid {uuid}");
-                //}
                 device.IsConnecting = true;
                 OnDeviceConnecting?.Invoke(device);
                 try
@@ -124,8 +118,8 @@ namespace Bluetooth.Services
 
         private async Task<bool> RequestPermission()
         {
+            await Task.Delay(2000);
             if (_adapter == null || !_adapter.IsEnabled) return false;
-            await Task.Delay(1000);
             var status = await Permissions.RequestAsync<Permissions.Bluetooth>();
             if (status == PermissionStatus.Granted)
             {
@@ -160,15 +154,15 @@ public class GattCallback : BluetoothGattCallback
     {
         if (status == GattStatus.Success)
         {
-            var batteryService = gatt.GetService(UUID.FromString("0000180F-0000-1000-8000-00805f9b34fb"));  // Battery Service
+            var batteryService = gatt.GetService(UUID.FromString("0000180f-0000-1000-8000-00805f9b34fb"));  // Battery Service
             if (batteryService != null)
             {
-                var batteryLevelCharacteristic = batteryService.GetCharacteristic(UUID.FromString("00002A19-0000-1000-8000-00805f9b34fb")); // Battery Level
+                var batteryLevelCharacteristic = batteryService.GetCharacteristic(UUID.FromString("00002a19-0000-1000-8000-00805f9b34fb")); // Battery Level
                 if (batteryLevelCharacteristic != null)
                 {
                     gatt.ReadCharacteristic(batteryLevelCharacteristic);
-                }
-            }
+                } else System.Diagnostics.Debug.WriteLine("Battery Level characteristic not found.");
+            } else System.Diagnostics.Debug.WriteLine("Battery Service characteristic not found.");
         }
     }
 
