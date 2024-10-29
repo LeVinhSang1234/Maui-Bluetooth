@@ -7,7 +7,7 @@
     <ScrollView>
         <VerticalStackLayout x:Name="Children">
             <!-- ANDROID -->
-            <FlexLayout IsVisible="{Binding IsAndroid}" >
+            <StackLayout IsVisible="{Binding IsAndroid}" >
                 <FlexLayout IsVisible="{Binding IsDeviceConnected}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
                     <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
                 </FlexLayout>
@@ -16,18 +16,20 @@
                     <ActivityIndicator IsRunning="{Binding DeviceConnected.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.4" />
                     <Label IsVisible="{Binding DeviceConnected.IsConnected}" Text="{Binding DeviceConnected.Result}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
                 </FlexLayout>
-            </FlexLayout>
+            </StackLayout>
             <!-- ANDROID -->
 
             <!-- IOS -->
-            <FlexLayout IsVisible="{Binding IsDeviceConnectedIOS}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
-                <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
-            </FlexLayout>
-            <FlexLayout IsVisible="{Binding IsDeviceConnectedIOS}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
-                <Label Text="{Binding DeviceConnectedIOS.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-                <ActivityIndicator IsRunning="{Binding DeviceConnectedIOS.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.7" />
-                <Label IsVisible="{Binding DeviceConnectedIOS.IsConnected}" Text="{Binding DeviceConnectedIOS.Result}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
-            </FlexLayout>
+            <StackLayout IsVisible="{Binding IsIOS}">
+                <FlexLayout IsVisible="{Binding IsDeviceConnectedIOS}" BackgroundColor="Transparent" Margin="20, 10, 10, 0">
+                    <Label Text="Device Information" VerticalOptions="Center" HorizontalOptions="StartAndExpand" Margin="0, 0, 10, 0"/>
+                </FlexLayout>
+                <FlexLayout IsVisible="{Binding IsDeviceConnectedIOS}" Direction="Row" JustifyContent="SpaceBetween" BackgroundColor="Transparent" Margin="20, 10, 10, 20">
+                    <Label Text="{Binding DeviceConnectedIOS.DisplayName}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                    <ActivityIndicator IsRunning="{Binding DeviceConnectedIOS.IsConnecting}" VerticalOptions="Center" HorizontalOptions="End" Scale="0.7" />
+                    <Label IsVisible="{Binding DeviceConnectedIOS.IsConnected}" Text="{Binding DeviceConnectedIOS.Result}" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />
+                </FlexLayout>
+            </StackLayout>
             <!-- IOS -->
             <FlexLayout Direction="Row" BackgroundColor="Transparent" Margin="20, 0, 0, 0">
                 <Label Text="MyDevices" VerticalOptions="Center" HorizontalOptions="StartAndExpand" />

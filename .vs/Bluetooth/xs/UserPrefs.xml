@@ -2,27 +2,29 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <Xamarin.Addins.Core.Project ActiveDebugTarget="MonoDevelop.IPhone.IPhoneDeviceTarget.00008030-000158D00AC0802E" />
+  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="Android.0C101FDD4007H8" />
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.MonoDroid LastDeploySdkVersion="34.0.43" />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <Debugger.DebugSourceFolders>
     <String>/Volumes/Disk2/Bluetooth</String>
     <String>/Users/sanglv/Desktop/Me/Maui-Bluetooth</String>
   </Debugger.DebugSourceFolders>
-  <MonoDevelop.Ide.Workbench ActiveDocument="Pages/HomePage/HomePage.xaml.cs">
+  <Xamarin.Addins.Core.Project ActiveDebugTarget="Android.0C101FDD4007H8" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../../usr/local/share/dotnet/sdk/8.0.110/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets">
     <Files>
-      <File FileName="Services/BluetoothServiceIOS.cs" Line="45" Column="28" />
-      <File FileName="Pages/HomePage/HomePage.xaml" Line="31" Column="25" />
-      <File FileName="Services/BluetoothService.cs" Line="191" Column="65" />
-      <File FileName="Platforms/iOS/Program.cs" Line="13" Column="30" />
+      <File FileName="Services/BluetoothServiceIOS.cs" />
+      <File FileName="Pages/HomePage/HomePage.xaml" />
+      <File FileName="Services/BluetoothService.cs" />
+      <File FileName="Platforms/iOS/Program.cs" />
       <File FileName="Pages/HomePage/HomePage.xaml.cs" Line="147" Column="52" />
+      <File FileName="../../../usr/local/share/dotnet/sdk/8.0.110/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets" Line="266" Column="5" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
-          <Node name="Bluetooth">
+          <Node name="Bluetooth" expanded="True">
             <Node name="Bluetooth">
-              <Node name="Models" expanded="True" />
               <Node name="Pages" expanded="True">
                 <Node name="HomePage" expanded="True">
                   <Node name="HomePage.xaml" expanded="True">
@@ -40,7 +42,5 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.MonoDroid LastDeploySdkVersion="34.0.43" />
-  <MonoDevelop.Ide.ItemProperties.Bluetooth PreferredExecutionTarget="MonoDevelop.IPhone.IPhoneDeviceTarget.00008030-000158D00AC0802E" />
-  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

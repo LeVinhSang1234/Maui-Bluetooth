@@ -9,8 +9,11 @@ namespace Bluetooth.Pages
 {
     public partial class HomePage : ContentPage, INotifyPropertyChanged
     {
+#if IOS
         public BluetoothServiceIOS? bluetoothServiceIOS;
-        public bool IsAndroid { get; } = DeviceInfo.Platform == DevicePlatform.Android;
+#endif
+        public bool IsAndroid { get; set; }
+        public bool IsIOS { get; set; }
 
 #if ANDROID
         public BluetoothService? bluetoothService;
@@ -20,40 +23,38 @@ namespace Bluetooth.Pages
         public BluetoothDeviceModel? DeviceConnected { get; set; }
         public bool IsDeviceConnected { get; set; }
 #endif
+#if IOS
         public List<BluetoothDeviceModelIOS> DevicesScanIOS;
         public List<BluetoothDeviceModelIOS> DevicesIOS;
         public List<BluetoothDeviceModelIOS> MyDevicesIOS;
         public BluetoothDeviceModelIOS? DeviceConnectedIOS { get; set; }
         public bool IsDeviceConnectedIOS { get; set; }
-
+#endif
 
         public HomePage()
         {
             InitializeComponent();
-            if (DeviceInfo.Platform == DevicePlatform.Android)
-            {
 #if ANDROID
-                DevicesScan = new List<BluetoothDeviceModel>();
-                Devices = new List<BluetoothDeviceModel>();
-                MyDevices = new List<BluetoothDeviceModel>();
+            DevicesScan = new List<BluetoothDeviceModel>();
+            Devices = new List<BluetoothDeviceModel>();
+            MyDevices = new List<BluetoothDeviceModel>();
 
-                bluetoothService = new BluetoothService();
-                bluetoothService.OnMyDeviceAdded += MyDeviceAdded;
-                bluetoothService.OnDeviceConnecting += OnDeviceConnecting;
-                bluetoothService.OnDeviceConnected += OnDeviceConnected;
-                //bluetoothService.OnDisconnecting += OnDisconnecting;
-                bluetoothService.OnDeviceConnectFail += OnDeviceConnectFail;
-                bluetoothService.OnMessage += OnMessage;
-                bluetoothService.OnDeviceScan += OnDeviceScan;
-                bluetoothService.OnEndDeviceScan += OnEndDeviceScan;
+            IsAndroid = true;
+            System.Diagnostics.Debug.WriteLine(DeviceInfo.Platform);
+            bluetoothService = new BluetoothService();
+            bluetoothService.OnMyDeviceAdded += MyDeviceAdded;
+            bluetoothService.OnDeviceConnecting += OnDeviceConnecting;
+            bluetoothService.OnDeviceConnected += OnDeviceConnected;
+            bluetoothService.OnDeviceConnectFail += OnDeviceConnectFail;
+            bluetoothService.OnMessage += OnMessage;
+            bluetoothService.OnDeviceScan += OnDeviceScan;
+            bluetoothService.OnEndDeviceScan += OnEndDeviceScan;
 #endif
-            }
-            else
-            {
+#if IOS
                 DevicesScanIOS = new List<BluetoothDeviceModelIOS>();
                 DevicesIOS = new List<BluetoothDeviceModelIOS>();
                 MyDevicesIOS = new List<BluetoothDeviceModelIOS>();
-
+                IsIOS = true;
                 bluetoothServiceIOS = new BluetoothServiceIOS();
                 bluetoothServiceIOS.OnMyDeviceAdded += MyDeviceIOSAdded;
                 bluetoothServiceIOS.OnDeviceDiscovered += OnDeviceDiscovered;
@@ -61,11 +62,12 @@ namespace Bluetooth.Pages
                 bluetoothServiceIOS.OnConnecting += OnConnectingIOS;
                 bluetoothServiceIOS.OnConnected += OnConnectedIOS;
                 bluetoothServiceIOS.OnMessage += OnMessageIOS;
-            }
+#endif
             BindingContext = this;
         }
 
         // ------------------------------ IOS ------------------------------ //
+#if IOS
         private void OnDeviceDiscovered(BluetoothDeviceModelIOS device)
         {
             var _deviceScan = DevicesScanIOS.FirstOrDefault(d => d.Device.Id == device.Device.Id);
@@ -181,7 +183,7 @@ namespace Bluetooth.Pages
             bluetoothServiceIOS.ConnectToDevice(device);
         }
         // ------------------------------ IOS ------------------------------ //
-
+#endif
         // ------------------------------ ANDROID ------------------------------ //
 #if ANDROID
         private void OnDeviceScan(BluetoothDeviceModel device)
@@ -198,6 +200,11 @@ namespace Bluetooth.Pages
         {
             IsDeviceConnected = device != null;
             DeviceConnected = device;
+            if (DeviceConnected != null)
+            {
+                DeviceConnected.IsConnected = false;
+                DeviceConnected.Result = string.Empty;
+            }
             OnPropertyChanged(nameof(IsDeviceConnected));
             OnPropertyChanged(nameof(DeviceConnected));
         }

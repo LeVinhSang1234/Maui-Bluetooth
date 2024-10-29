@@ -38,7 +38,7 @@ namespace Bluetooth.Services
         public async Task getDevices()
         {
             await RequestPermission();
-           
+
             _ = StartScanAsync();
         }
 
@@ -87,6 +87,11 @@ namespace Bluetooth.Services
             OnMessage?.Invoke($"BatteryLevel {batteryLevel}%");
         }
 
+        public void BatteryLevelError(string message)
+        {
+            OnMessage?.Invoke($"{message}");
+        }
+
         public void Connected(BluetoothDevice device)
         {
             OnDeviceConnected?.Invoke(device);
@@ -108,7 +113,7 @@ namespace Bluetooth.Services
                 while (_bluetoothManager.GetConnectionState(_bluetoothGatt.Device, ProfileType.Gatt) == ProfileState.Connected)
                 {
                     _bluetoothGatt!.Disconnect();
-                    await Task.Delay(1000);
+                    await Task.Delay(3000);
                 }
                 OnMessage?.Invoke(null);
             }
@@ -167,7 +172,7 @@ public class GattCallback : BluetoothGattCallback
         while (gatt != null && bluetoothManager.GetConnectionState(gatt.Device, ProfileType.Gatt) == ProfileState.Connected)
         {
             gatt.DiscoverServices();
-            await Task.Delay(2000);
+            await Task.Delay(5000);
         }
     }
 
@@ -196,9 +201,9 @@ public class GattCallback : BluetoothGattCallback
                 {
                     gatt.ReadCharacteristic(batteryLevelCharacteristic);
                 }
-                else System.Diagnostics.Debug.WriteLine("Battery Level characteristic not found.");
+                else _bluetoothService.BatteryLevelError("Battery Level not found");
             }
-            else System.Diagnostics.Debug.WriteLine("Battery Service characteristic not found.");
+            else _bluetoothService.BatteryLevelError("Battery Level not found");
         }
     }
 

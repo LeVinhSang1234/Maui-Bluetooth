@@ -83,7 +83,7 @@ namespace Bluetooth.Services
                 var message = await GetSerialNumber(device);
                 if (!string.IsNullOrEmpty(message))
                 {
-                    OnMessage?.Invoke(message);
+                    OnMessage?.Invoke($"Serial Number {message}");
                 }
             }
             catch (Exception ex)
